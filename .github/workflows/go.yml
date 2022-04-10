@@ -1,0 +1,59 @@
+name: Go
+on:
+  push:
+    branches: main
+env:
+  CI_BIN: prisk
+#  CI_CONF: config_prisk
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: load Go 1.14 env
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.14
+        id: go
+
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: Get dependencies
+        working-directory: .
+        run: |
+          go mod tidy
+
+      - name: Test
+        working-directory: .
+        run: |
+          GOOS=linux GPARCH=amd64 go test
+      - name: Build
+        working-directory: .
+        run: |
+          go test
+
+          mkdir test
+  push-oss:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download dist
+        uses: actions/download-artifact@v1
+        with:
+          name: bin
+          path: dist
+
+      - name: pwd
+        run: |
+          pwd
+          cd dist
+          pwd
+          ls
+          cd prisk
+          pwd
+          ls
+      - name: Enable virtual endpoint
+        env:
